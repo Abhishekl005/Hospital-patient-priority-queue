@@ -1,72 +1,103 @@
-#include <iostream>
-#include <queue>
-#include <string>
-using namespace std;
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 100
 
 struct Patient {
-    string name;
+    char name[20];
     int priority;
-
-    // For min-heap: smaller priority number comes first
-    bool operator>(const Patient& other) const {
-        return priority > other.priority;
-    }
 };
 
-class HospitalQueue {
-private:
-    priority_queue<Patient, vector<Patient>, greater<Patient>> patients;
+struct Patient heap[MAX];
+int size = 0;
 
-public:
-    // Function 1: Add a patient
-    void addPatient(string name, int priority) {
-        patients.push({name, priority});
-        cout << "Added: " << name
-             << " (Priority " << priority << ")" << endl;
+void swap(struct Patient *a, struct Patient *b) {
+    struct Patient temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void addPatient(char name[], int priority) {
+    int i;
+
+    size++;
+    i = size - 1;
+
+    strcpy(heap[i].name, name);
+    heap[i].priority = priority;
+
+    while (i > 0) {
+        int parent = (i - 1) / 2;
+
+        if (heap[parent].priority <= heap[i].priority)
+            break;
+
+        swap(&heap[parent], &heap[i]);
+        i = parent;
     }
 
-    // Function 2: Treat next patient
-    void treatNext() {
-        if (patients.empty()) {
-            cout << "No patients waiting." << endl;
-            return;
-        }
+    printf("Added: %s (Priority %d)\n", name, priority);
+}
 
-        Patient next = patients.top();
-        patients.pop();
+void treatNext() {
+    struct Patient next;
+    int i = 0;
 
-        cout << "Treating: " << next.name
-             << " (Priority " << next.priority << ")" << endl;
+    if (size == 0) {
+        printf("No patients waiting.\n");
+        return;
     }
-};
+
+    next = heap[0];
+
+    heap[0] = heap[size - 1];
+    size--;
+
+    while (1) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int smallest = i;
+
+        if (left < size && heap[left].priority < heap[smallest].priority)
+            smallest = left;
+
+        if (right < size && heap[right].priority < heap[smallest].priority)
+            smallest = right;
+
+        if (smallest == i)
+            break;
+
+        swap(&heap[i], &heap[smallest]);
+        i = smallest;
+    }
+
+    printf("Treating: %s (Priority %d)\n", next.name, next.priority);
+}
 
 int main() {
-    HospitalQueue hospital;
+    addPatient("P1", 3);
+    addPatient("P2", 1);
+    addPatient("P3", 2);
+    addPatient("P4", 1);
+    addPatient("P5", 3);
+    addPatient("P6", 2);
 
-    // Step 3: Add P1-P6
-    hospital.addPatient("P1", 3);
-    hospital.addPatient("P2", 1);
-    hospital.addPatient("P3", 2);
-    hospital.addPatient("P4", 1);
-    hospital.addPatient("P5", 3);
-    hospital.addPatient("P6", 2);
+    printf("\n--- Treatment Order ---\n");
 
-    cout << "\n--- Treatment Order ---\n";
+    treatNext();
+    treatNext();
+    treatNext();
 
-    // Treat 3 patients
-    hospital.treatNext();
-    hospital.treatNext();
-    hospital.treatNext();
+    printf("\n--- New Emergency Patient ---\n");
 
-    // Add a new Emergency patient
-    cout << "\n--- New Emergency Patient ---\n";
-    hospital.addPatient("P7", 1);
+    addPatient("P7", 1);
 
-    // Continue treating everyone
-    cout << "\n--- Remaining Treatment Order ---\n";
+    printf("\n--- Remaining Treatment Order ---\n");
 
-    hospital.treatNext();
-    hospital.treatNext();
-    hospital.treatNext();
-    hospital.treatNext();
+    treatNext();
+    treatNext();
+    treatNext();
+    treatNext();
+
+    return 0;
 }
